@@ -3,6 +3,7 @@ from typing import Any
 
 import httpx
 from json import loads
+import re
 
 from dify_plugin import Tool
 from dify_plugin.entities.tool import ToolInvokeMessage
@@ -70,7 +71,10 @@ class HttpRequestStreamTool(Tool):
                 raise ValueError("body must be a valid JSON string.")
 
         try:
-            text = ""
+            # 标记是否已经提取并输出过 conversation_id，避免重复输出
+            conversation_id_emitted = False
+            # 预编译匹配 conversation_id 的正则表达式：匹配形如 conversation_id/xxxxx 的片段
+            conversation_id_pattern = re.compile(r"\bconversation_id\/([^\s]+)")
             with httpx.stream(**stream_kwargs) as response:
                 # 对非 2xx 状态码进行友好提示并终止流
                 if response.status_code < 200 or response.status_code >= 300:
@@ -83,7 +87,18 @@ class HttpRequestStreamTool(Tool):
                     if line.startswith("data:"):
                         line = line[5:].strip()
                     if line:
-                        text += line
+                        # 先检测是否包含 conversation_id 片段
+                        match = conversation_id_pattern.search(line)
+                        if match:
+                            # 命中 conversation_id 片段的 chunk，不输出到 stream_text
+                            if not conversation_id_emitted:
+                                conversation_id_value = match.group(1)
+                                # 输出一次 conversation_id 变量，供后续节点引用
+                                yield self.create_variable_message("conversation_id", conversation_id_value)
+                                conversation_id_emitted = True
+                            # 跳过本次 chunk 的 stream_text 输出
+                            continue
+                        # 非 conversation_id 的 chunk，正常输出到 stream_text
                         yield self.create_stream_variable_message("stream_text", line)
             
         except httpx.HTTPError as e:

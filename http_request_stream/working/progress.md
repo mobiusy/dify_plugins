@@ -10,9 +10,12 @@
 ## 已完成工作
 - [2025-11-07 16:53:37 +08:00] 完成 README 文档的全面撰写与结构化说明
 - [2025-11-07 17:51:36 +08:00] 新增可选 headers 参数（JSON 对象字符串），实现工具代码读取并与默认 SSE 请求头合并，支持自定义请求头覆盖默认值
+- [2025-11-07 18:12:22 +08:00] 新增输出参数 conversation_id：在流式 chunk 中检测形如 "conversation_id/xxxxx" 的片段，提取并以变量输出，更新 YAML 的 output_schema 与工具实现
+- [2025-11-07 18:23:33 +08:00] 优化 conversation_id 提取逻辑：当 chunk 匹配到 conversation_id 时不输出到 stream_text，同时保持 conversation_id 仅输出一次
 
 ## 待办事项
 - [x] 支持自定义请求头（headers 参数，JSON 字符串）
+- [x] 从流式 chunk 中提取并输出 conversation_id 参数
 - [ ] 提供认证信息示例（如 Bearer Token）
 - [ ] 增加更多使用示例（不同服务的 SSE 与分块响应）
 - [ ] 完善错误信息的指引与用户友好提示
