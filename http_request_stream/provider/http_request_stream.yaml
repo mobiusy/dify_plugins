@@ -1,0 +1,17 @@
+identity:
+  author: mobiusy
+  name: http_request_stream
+  label:
+    en_US: http_request_stream
+    zh_Hans: http请求流式输出
+    pt_BR: http_request_stream
+  description:
+    en_US: get stream result from http api, and return stream output for answer node
+    zh_Hans: get stream result from http api, and return stream output for answer node
+    pt_BR: get stream result from http api, and return stream output for answer node
+  icon: icon_stream.svg
+tools:
+  - tools/http_request_stream.yaml
+extra:
+  python:
+    source: provider/http_request_stream.py

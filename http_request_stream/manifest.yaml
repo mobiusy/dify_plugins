@@ -1,0 +1,33 @@
+version: 0.0.1
+type: plugin
+author: mobiusy
+name: http_request_stream
+label:
+  en_US: http_request_stream
+  ja_JP: http_request_stream
+  zh_Hans: http_request_stream
+  pt_BR: http_request_stream
+description:
+  en_US: get stream result from http api, and return stream output for answer node
+  ja_JP: get stream result from http api, and return stream output for answer node
+  zh_Hans: get stream result from http api, and return stream output for answer node
+  pt_BR: get stream result from http api, and return stream output for answer node
+icon: icon_stream.svg
+resource:
+  memory: 268435456
+  permission: {}
+plugins:
+  tools:
+    - provider/http_request_stream.yaml
+meta:
+  version: 0.0.1
+  arch:
+    - amd64
+    - arm64
+  runner:
+    language: python
+    version: "3.12"
+    entrypoint: main
+created_at: 2025-11-06T11:18:14.5649477+08:00
+privacy: PRIVACY.md
+verified: false
