@@ -75,6 +75,17 @@ parameters:
       pt_BR: request body
     llm_description: 请求主体
     form: llm
+  - name: headers
+    type: string
+    required: false
+    label:
+      en_US: Headers
+      zh_Hans: 请求头
+    human_description:
+      en_US: "Optional request headers in JSON object string, e.g. {\"Authorization\": \"Bearer xxx\", \"X-Custom\": \"value\"}."
+      zh_Hans: "可选的请求头，使用 JSON 对象字符串，例如 {\"Authorization\": \"Bearer xxx\", \"X-Custom\": \"value\"}。"
+    llm_description: "Optional request headers as a JSON object string; when provided, they will be merged with default SSE headers."
+    form: llm
 
 extra:
   python:

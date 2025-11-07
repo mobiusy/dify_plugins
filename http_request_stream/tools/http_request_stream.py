@@ -20,25 +20,46 @@ class HttpRequestStreamTool(Tool):
         url = tool_parameters.get("url")
         method = tool_parameters.get("method", "GET")
         body = tool_parameters.get("body", None)
+        headers_str = tool_parameters.get("headers", None)
         if not url:
             raise httpx.InvalidURL("URL cannot be empty.")
         
         if not url.startswith(("http://", "https://")):
             raise httpx.InvalidURL("URL must start with http:// or https://.")
 
+        # 解析 headers 参数：支持用户以 JSON 对象字符串方式传入请求头
+        user_headers: dict[str, Any] = {}
+        if headers_str:
+            try:
+                parsed = loads(headers_str)
+                if isinstance(parsed, dict):
+                    user_headers = parsed
+                else:
+                    raise ValueError("headers must be a JSON object string.")
+            except ValueError:
+                # 用户传入的 headers 字符串不是合法 JSON 或不是对象
+                raise ValueError("headers must be a valid JSON object string.")
+
         # 构造 httpx.stream 的参数，增加 SSE 兼容头部与超时设置
         stream_kwargs: dict[str, Any] = {
             "method": method,
             "url": url,
-            # SSE 推荐的请求头，提升与代理/网关的兼容性
-            "headers": {
-                "Accept": "text/event-stream",
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            },
             # 读取不设整体超时，连接阶段限制为 5 秒，避免读超时中断流
             "timeout": httpx.Timeout(timeout=None, connect=5.0),
         }
+
+        # 默认 SSE 兼容请求头，提升与代理/网关的兼容性
+        default_headers: dict[str, str] = {
+            "Accept": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+        # 合并用户请求头，用户值覆盖默认值，确保所有值为字符串类型
+        merged_headers: dict[str, str] = {
+            **default_headers,
+            **{str(k): str(v) for k, v in user_headers.items()}
+        }
+        stream_kwargs["headers"] = merged_headers
 
         if body:
             # 检查body是否是合法的json格式
