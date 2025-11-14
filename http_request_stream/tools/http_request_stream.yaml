@@ -99,4 +99,6 @@ output_schema:
     conversation_id:
       type: string
       description: Extracted conversation id when a chunk matches the pattern "conversation_id/xxxxx"
-
+    error:
+      type: string
+      description: Error message extracted when receiving SSE event "error"

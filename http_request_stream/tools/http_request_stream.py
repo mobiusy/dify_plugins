@@ -97,30 +97,37 @@ class HttpRequestStreamTool(Tool):
                 # 对非 2xx 状态码进行友好提示并终止流
                 if response.status_code < 200 or response.status_code >= 300:
                     err_msg = f"HTTP Error: {response.status_code}"
+                    response.read()
+                    err_msg = f"{err_msg}. Response Text: {response.text if response.text else '(empty)'}"
                     logger.error(err_msg)
-                    # 使用 httpx 内置的 raise_for_status 构造并抛出包含 request/response 的异常
-                    response.raise_for_status()
+                    raise httpx.HTTPStatusError(err_msg, request=response.request, response=response)
+                current_event: str | None = None
                 for raw_line in response.iter_lines():
                     if raw_line is None:
                         continue
                     line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
                     line = line.strip()
+                    if not line:
+                        continue
+                    if line.startswith("event:"):
+                        current_event = line[6:].strip()
+                        continue
                     if line.startswith("data:"):
                         line = line[5:].strip()
-                    if line:
-                        # 先检测是否包含 conversation_id 片段
-                        match = conversation_id_pattern.search(line)
-                        if match:
-                            # 命中 conversation_id 片段的 chunk，不输出到 stream_text
-                            if not conversation_id_emitted:
-                                conversation_id_value = match.group(1)
-                                # 输出一次 conversation_id 变量，供后续节点引用
-                                yield self.create_variable_message("conversation_id", conversation_id_value)
-                                conversation_id_emitted = True
-                            # 跳过本次 chunk 的 stream_text 输出
-                            continue
-                        # 非 conversation_id 的 chunk，正常输出到 stream_text
-                        yield self.create_stream_variable_message("stream_text", line)
+                    if current_event == "error" and line:
+                        err_msg = line
+                        yield self.create_variable_message("error", err_msg)
+                        logger.error(err_msg)
+                        raise RuntimeError(err_msg)
+                    # 先检测是否包含 conversation_id 片段
+                    match = conversation_id_pattern.search(line)
+                    if match:
+                        if not conversation_id_emitted:
+                            conversation_id_value = match.group(1)
+                            yield self.create_variable_message("conversation_id", conversation_id_value)
+                            conversation_id_emitted = True
+                        continue
+                    yield self.create_stream_variable_message("stream_text", line)
             
         except httpx.HTTPError as e:
             # 捕获 httpx 的 HTTP 异常，并输出到用户侧
