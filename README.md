@@ -5,7 +5,7 @@ A plugin for sending HTTP requests and returning response content as a stream. I
 
 ## Basic Info
 - Author: mobiusy
-- Version: 0.0.2
+- Version: 0.0.3
 - Type: tool
 
 ## Feature Highlights
