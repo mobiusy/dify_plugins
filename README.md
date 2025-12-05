@@ -1,38 +1,39 @@
-# Dify 插件：http_request_stream
+# Dify Plugin: http_request_stream
+[中文版](./README.zh.md)
 
-一个用于发送 HTTP 请求并以流式方式返回响应内容的插件。该插件特别适用于对接支持流式输出（如 SSE、分块响应）的 HTTP 服务，并将流内容实时输出给回答节点。
+A plugin for sending HTTP requests and returning response content as a stream. It is especially suitable for integrating with HTTP services that support streaming output (such as SSE or chunked responses), and continuously emits the stream content to the Answer node in real time.
 
-## 基本信息
-- 作者：mobiusy
-- 版本：0.0.2
-- 类型：tool
+## Basic Info
+- Author: mobiusy
+- Version: 0.0.2
+- Type: tool
 
-## 功能特性
+## Feature Highlights
 
-### 流式请求与输出
-- 发送 HTTP 请求（支持 GET/POST/PUT/DELETE/HEAD/PATCH），并在响应为流式内容时实时读取
-- 内置 SSE 兼容请求头（Accept: text/event-stream / Connection: keep-alive / Cache-Control: no-cache）
-- 将流式文本以变量的形式持续输出到回答节点，变量名为 `stream_text`
+### Streaming Requests and Output
+- Sends HTTP requests (supports GET/POST/PUT/DELETE/HEAD/PATCH) and reads streaming responses in real time
+- Built-in SSE-compatible headers (Accept: text/event-stream / Connection: keep-alive / Cache-Control: no-cache)
+- Continuously outputs streamed text to the Answer node as a variable named `stream_text`
 
-### 请求体支持
-- 支持可选的 JSON 请求体（字符串形式传入），自动解析为 JSON 并随请求发送
+### Request Body Support
+- Supports an optional JSON request body (provided as a string), automatically parsed and sent with the request
 
-### 健壮的错误处理
-- 检查 URL 合法性（必须以 http:// 或 https:// 开头）
-- 对非 2xx 的 HTTP 状态码进行友好错误提示
-- 连接阶段超时控制（连接超时 5 秒，读取阶段不设总体超时以保障流不中断）
+### Robust Error Handling
+- Validates URL format (must start with http:// or https://)
+- Friendly error messages for non-2xx HTTP status codes
+- Connection stage timeout control (5s connection timeout; no overall read timeout to avoid interrupting the stream)
 
-## 安装与快速开始
+## Installation and Quick Start
 
-1. 在 Dify 中安装本插件（可从 Marketplace 安装或通过本地包导入）
-2. 在工作流或工具流中添加工具 `http_request_stream`
-3. 在回答节点选择“流式输出”方式，并引用变量 `stream_text` 展示实时内容
+1. Install this plugin in Dify (via Marketplace or local package import)
+2. Add the tool `http_request_stream` in a Workflow or Toolflow
+3. In the Answer node, select "Streaming output" and reference the variable `stream_text` to display real-time content
 
-> 说明：本插件无需额外的凭证配置。
+> Note: This plugin does not require additional credential configuration.
 
-## 使用示例
+## Usage Examples
 
-### 1）GET 方式获取流式数据
+### 1) GET request to fetch streaming data
 ```yaml
 tool: http_request_stream
 parameters:
@@ -40,7 +41,7 @@ parameters:
   url: "https://httpbin.org/stream/10"
 ```
 
-### 2）POST 方式，发送 JSON 请求体，并获取流式返回
+### 2) POST request with JSON body and streaming response
 ```yaml
 tool: http_request_stream
 parameters:
@@ -49,60 +50,56 @@ parameters:
   body: "{\"query\": \"hello\", \"user_id\": 123}"
 ```
 
-### 3）在回答节点中展示流输出
-- 将回答节点的内容设置为引用变量 `{{stream_text}}`
-- 当远端服务持续返回流式文本时，回答节点将持续更新显示
+### 3) Display stream output in the Answer node
+- Set the Answer node content to reference `{{stream_text}}`
+- When the remote service keeps returning streaming text, the Answer node will keep updating the display
 
-## 工具参考
+## Tool Reference
 
-| 工具 | 描述 | 关键参数 |
-|------|------|----------|
-| `http_request_stream` | 发送 HTTP 请求并以流式方式返回响应文本 | `method`（选择：GET/POST/PUT/DELETE/HEAD/PATCH），`url`（必填），`body`（可选 JSON 字符串） |
+| Tool | Description | Key Parameters |
+|------|-------------|----------------|
+| `http_request_stream` | Sends an HTTP request and returns response text as a stream | `method` (options: GET/POST/PUT/DELETE/HEAD/PATCH), `url` (required), `body` (optional JSON string) |
 
-### 参数说明
-- `method`（必填，select）：HTTP 方法，默认 `GET`
-- `url`（必填，string）：请求的完整 URL（必须以 http:// 或 https:// 开头）
-- `body`（可选，string）：JSON 字符串形式的请求体（仅在需要时提供，格式必须合法）
+### Parameter Details
+- `method` (required, select): HTTP method, default `GET`
+- `url` (required, string): Full request URL (must start with http:// or https://)
+- `body` (optional, string): Request body in JSON string form (only provide when needed; must be valid JSON)
 
-### 输出变量
-- `stream_text`：工具每次接收到的流文本片段会即时以该变量输出，可用于回答节点的动态展示
+### Output Variable
+- `stream_text`: Each streamed text fragment received by the tool is immediately emitted as this variable, which can be used for dynamic display in the Answer node
 
-## 错误处理
+## Error Handling
 
-- URL 为空或不合法：抛出 `httpx.InvalidURL` 错误
-- 非 2xx 状态码：抛出 `httpx.HTTPStatusError` 并显示状态码
-- JSON 解析失败：`body` 不是合法 JSON 字符串时抛出 `ValueError`
-- 网络异常或中断：捕获并抛出 `httpx.HTTPError` 或其他异常，便于定位问题
+- Empty or invalid URL: raises `httpx.InvalidURL`
+- Non-2xx status code: raises `httpx.HTTPStatusError` with the status code
+- JSON parsing failure: raises `ValueError` when `body` is not a valid JSON string
+- Network errors or interruptions: catches and raises `httpx.HTTPError` or other exceptions to aid troubleshooting
 
-## 限制与注意事项
+## Limitations and Notes
 
-- 仅支持 HTTP/HTTPS URL
-- 服务器需支持流式输出（SSE 或分块响应）才能持续返回内容，否则可能一次性返回并结束
-- 当前版本不支持自定义请求头或认证参数；如需扩展，请在工具逻辑中添加相应支持
-- `body` 仅支持 JSON 字符串格式
+- Only supports HTTP/HTTPS URLs
+- The server must support streaming output (SSE or chunked responses) to continuously return content; otherwise, it may respond once and end
+- Custom headers or authentication parameters are not supported in the current version; if needed, extend support in the tool logic
+- `body` supports only JSON string format
 
-## 常见问题与排查
+## FAQ and Troubleshooting
 
-1. “URL must start with http:// or https://”：请确认 URL 前缀正确
-2. “HTTP Error: <status_code>”：服务端返回了非 2xx 状态码，请检查接口是否正常或参数是否正确
-3. “body must be a valid JSON string.”：`body` 必须为合法的 JSON 字符串，请使用双引号并确保可被解析
-4. 长时间无输出：目标接口可能不支持流式返回或被网关/代理阻断
+1. "URL must start with http:// or https://": Ensure the URL prefix is correct
+2. "HTTP Error: <status_code>": The server returned a non-2xx status code; check whether the API is functioning and whether parameters are correct
+3. "body must be a valid JSON string.": `body` must be a valid JSON string; use double quotes and ensure it can be parsed
+4. Long periods without output: The target endpoint may not support streaming, or output may be blocked by a gateway/proxy
 
-## 开发说明
+## Development Notes
 
-本插件基于 Dify 插件框架实现，遵循“一个文件一个工具类”的最佳实践：
-- 工具定义：`tools/http_request_stream.yaml`
-- 工具实现：`tools/http_request_stream.py`（类名：`HttpRequestStreamTool`）
-- 提供者配置：`provider/http_request_stream.yaml`，本插件当前不需要凭证
+This plugin is built with the Dify plugin framework and follows the "one file, one tool class" best practice:
+- Tool definition: `tools/http_request_stream.yaml`
+- Tool implementation: `tools/http_request_stream.py` (class name: `HttpRequestStreamTool`)
+- Provider configuration: `provider/http_request_stream.yaml`; this plugin currently does not require credentials
 
-实现要点：
-- 使用 `httpx.stream` 进行流式读取，并设置 SSE 兼容头部
-- 每次读取到的流文本通过 `create_stream_variable_message("stream_text", line)` 持续输出
+Implementation highlights:
+- Uses `httpx.stream` for streaming reads and sets SSE-compatible headers
+- Each line of streamed text is emitted via `create_stream_variable_message("stream_text", line)`
 
-## 许可
+## License
 
-本插件按现状提供用于 Dify 使用。请参考 Dify 的许可条款以了解具体使用权利。
-
-
-
-
+This plugin is provided as-is for use with Dify. Refer to Dify's license terms for details on usage rights.
