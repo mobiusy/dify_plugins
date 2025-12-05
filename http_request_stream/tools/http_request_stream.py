@@ -106,14 +106,13 @@ class HttpRequestStreamTool(Tool):
                     if raw_line is None:
                         continue
                     line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
-                    line = line.strip()
                     if not line:
                         continue
                     if line.startswith("event:"):
                         current_event = line[6:].strip()
                         continue
-                    if line.startswith("data:"):
-                        line = line[5:].strip()
+                    if line.startswith("data: "):
+                        line = line[6:]
                     if current_event == "error" and line:
                         err_msg = line
                         yield self.create_variable_message("error", err_msg)
